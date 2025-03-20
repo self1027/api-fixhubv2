@@ -24,8 +24,6 @@ export async function isComplexNameContained(complexName) {
     return !!complex;
 }
 
-
-
 export async function getAllComplexesNames() {
     return await prisma.complex.findMany({
         select: { name: true }

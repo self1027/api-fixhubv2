@@ -60,7 +60,7 @@ router.post('/login', loginLimiter, async (req, res) => {
         console.error(error);
         res.status(500).json({ error: "Erro ao processar login" });
     }
-});
+})
 
 //router.put()
 
