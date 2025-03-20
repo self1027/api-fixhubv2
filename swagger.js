@@ -5,16 +5,17 @@ const options = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'Minha API',
+            title: 'FixHub API',
             version: '1.0.0',
-            description: 'Documentação da API',
+            description: 'API para gerenciamento de manutenções',
         },
     },
-    apis: ['./src/routes/*.js'],
+    apis: ['./src/route/*.js'], // Certifique-se de que as rotas estão nesse caminho
 };
 
 const swaggerSpec = swaggerJSDoc(options);
 
 export function setupSwagger(app) {
+    console.log("⚡ Configurando Swagger em /docs...");
     app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }

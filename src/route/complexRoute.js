@@ -4,6 +4,40 @@ import { getAllComplexesNames } from '../services/complexServices.js'
 
 const router = express.Router()
 
+/**
+ * @swagger
+ * tags:
+ *   name: Complexos
+ *   description: Gerenciamento de complexos residenciais
+ */
+
+/**
+ * @swagger
+ * /complex:
+ *   get:
+ *     summary: Lista todos os complexos disponíveis
+ *     tags: [Complexos]
+ *     responses:
+ *       200:
+ *         description: Lista de nomes dos complexos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "Residencial Primavera"
+ *       500:
+ *         description: Erro ao buscar complexos
+ */
+
+
 //  router.post()
 
 router.get('/complex', async (req, res) => {

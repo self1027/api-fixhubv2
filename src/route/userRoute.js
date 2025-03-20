@@ -8,6 +8,77 @@ import { USER_ROLES } from '../constant/userRole.js';
 
 const router = express.Router()
 
+/**
+ * @swagger
+ * tags:
+ *   name: Autenticação
+ *   description: Endpoints relacionados ao login e registro de usuários
+ */
+
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Registra um novo usuário
+ *     tags: [Autenticação]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - username
+ *               - password
+ *               - complexName
+ *               - complement
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "João Silva"
+ *               username:
+ *                 type: string
+ *                 example: "joaosilva"
+ *               password:
+ *                 type: string
+ *                 example: "senhaSegura123"
+ *               complexName:
+ *                 type: string
+ *                 example: "Residencial Alpha"
+ *               complement:
+ *                 type: string
+ *                 example: "Bloco A, Apartamento 101"
+ *     responses:
+ *       201:
+ *         description: Usuário criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 name:
+ *                   type: string
+ *                   example: "João Silva"
+ *                 username:
+ *                   type: string
+ *                   example: "joaosilva"
+ *                 complexId:
+ *                   type: integer
+ *                   example: 5
+ *                 complement:
+ *                   type: string
+ *                   example: "Bloco A, Apartamento 101"
+ *       400:
+ *         description: Erro - Campos obrigatórios não preenchidos
+ *       404:
+ *         description: Complexo não encontrado
+ *       500:
+ *         description: Erro interno do servidor
+ */
 router.post('/register', async (req, res) => {
     try {
         const { name, username, password, complexName, complement } = req.body
@@ -32,6 +103,51 @@ router.post('/register', async (req, res) => {
     }
 })
 
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Autentica um usuário e retorna tokens de acesso
+ *     tags: [Autenticação]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: "joaosilva"
+ *               password:
+ *                 type: string
+ *                 example: "senhaSegura123"
+ *     responses:
+ *       200:
+ *         description: Login bem-sucedido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsIn..."
+ *                 refreshToken:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsIn..."
+ *       400:
+ *         description: Usuário e senha são obrigatórios
+ *       401:
+ *         description: Credenciais inválidas
+ *       403:
+ *         description: Usuário não validado
+ *       500:
+ *         description: Erro interno do servidor
+ */
 router.post('/login', loginLimiter, async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -61,9 +177,5 @@ router.post('/login', loginLimiter, async (req, res) => {
         res.status(500).json({ error: "Erro ao processar login" });
     }
 })
-
-//router.put()
-
-//router.delete()
 
 export default router

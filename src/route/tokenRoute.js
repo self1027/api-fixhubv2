@@ -4,6 +4,53 @@ import { validateRefreshToken, generateAccessToken, generateRefreshToken, saveTo
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   name: Autenticação
+ *   description: Rotas de autenticação e gerenciamento de tokens
+ */
+
+/**
+ * @swagger
+ * /refresh:
+ *   post:
+ *     summary: Gera um novo token de acesso usando um refresh token válido
+ *     tags: [Autenticação]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI..."
+ *     responses:
+ *       200:
+ *         description: Novo access token gerado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI..."
+ *                 refreshToken:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI..."
+ *       400:
+ *         description: Refresh token não fornecido
+ *       403:
+ *         description: Refresh token inválido ou expirado
+ *       500:
+ *         description: Erro interno ao processar a solicitação
+ */
+
 router.post("/refresh", async (req, res) => {
     try {
         const { refreshToken } = req.body;
