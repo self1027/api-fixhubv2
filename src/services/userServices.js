@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma.js'
 import bcrypt from 'bcrypt';
+import { USER_ROLES } from '../constant/userRole.js';
 
 export async function createNewUser(name, username, password, id_Complex, complement){
     return await prisma.user.create({
@@ -8,7 +9,7 @@ export async function createNewUser(name, username, password, id_Complex, comple
             username,
             password,
             id_Complex, 
-            type: 9,
+            type: [USER_ROLES.NAO_VALIDADO],
             status: true,
             complement
         }
