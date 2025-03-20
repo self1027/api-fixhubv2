@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  id_Complex  Int
+  name        String
+  username    String   @unique
+  password    String
+  complement String
+  type        Int
+  status      Boolean  @default(true)
+
+  complex     Complex  @relation(fields: [id_Complex], references: [id])
+  requisitions Requisition[]
+  tokens      Token[]
+}
+
+model Complex {
+  id          Int      @id @default(autoincrement())
+  name        String
+  address     String
+
+  users       User[]
+  requisitions Requisition[]
+}
+
+model Requisition {
+  id          Int      @id @default(autoincrement())
+  id_User     Int
+  id_Complex  Int
+  title       String
+  content     String
+  location    String
+  imgUrl      String?
+  status      String
+  priority    String
+
+  user        User     @relation(fields: [id_User], references: [id])
+  complex     Complex  @relation(fields: [id_Complex], references: [id])
+}
+
+model Token {
+  id          Int      @id @default(autoincrement())
+  id_User     Int
+  accessToken String   @unique
+  refreshToken String  @unique
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  user        User     @relation(fields: [id_User], references: [id], onDelete: Cascade)
+}
