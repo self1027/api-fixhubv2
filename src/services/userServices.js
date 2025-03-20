@@ -37,3 +37,35 @@ export async function getUserComplexId(id_User) {
 
     return user.id_Complex;
 }
+
+export async function getUserByUsername(username) {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { username },
+            select: { id: true, username: true, type: true, password: true },
+        });
+
+        return user; // Retorna o usuário ou null se não encontrado
+    } catch (error) {
+        console.error("Erro ao buscar usuário por username:", error);
+        throw error;
+    }
+}
+
+export async function updateUser (userId, { type, password }) {
+    try {
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                type: type !== undefined ? type : undefined, // Atualiza apenas se fornecido
+                password: password !== undefined ? password : undefined, // Atualiza apenas se fornecido
+            },
+            select: { id: true, username: true, type: true },
+        });
+
+        return updatedUser;
+    } catch (error) {
+        console.error("Erro ao atualizar usuário:", error);
+        throw error;
+    }
+};
