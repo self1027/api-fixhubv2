@@ -24,3 +24,16 @@ export async function encryptPassword(password) {
 export async function checkPassword(attemptedPassword, savedPassword) {
     return await bcrypt.compare(attemptedPassword, savedPassword);
 }
+
+export async function getUserComplexId(id_User) {
+    const user = await prisma.user.findUnique({
+        where: { id: id_User },
+        select: { id_Complex: true }
+    });
+
+    if (!user || !user.id_Complex) {
+        throw new Error("Usuário não associado a nenhum complexo");
+    }
+
+    return user.id_Complex;
+}
