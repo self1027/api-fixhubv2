@@ -9,7 +9,7 @@ export async function createNewUser(name, username, password, id_Complex, comple
             username,
             password,
             id_Complex, 
-            type: [USER_ROLES.NAO_VALIDADO],
+            type: USER_ROLES.NAO_VALIDADO,
             status: true,
             complement
         }
