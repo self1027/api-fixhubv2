@@ -62,3 +62,27 @@ export async function validateToken(accessToken) {
     const now = new Date();
     return token.expiresAt > now;
 }
+
+export async function verifyToken(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ error: "Token não fornecido" });
+        }
+
+        const accessToken = authHeader.split(" ")[1];
+
+        const isTokenValid = await validateToken(accessToken);
+        if (!isTokenValid) {
+            return res.status(401).json({ error: "Token inválido ou expirado" });
+        }
+
+        const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+
+        req.user = decoded;
+
+        next();
+    } catch (error) {
+        return res.status(401).json({ error: "Token inválido" });
+    }
+}
