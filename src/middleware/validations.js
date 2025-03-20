@@ -1,4 +1,4 @@
-import { USER_ROLES } from '../config/constants.js'; 
+import { USER_ROLES } from '../constant/userRole.js'; 
 
 export function authorizeRequisitionCreation(req, res, next) {
     const { type } = req.user;
@@ -7,5 +7,5 @@ export function authorizeRequisitionCreation(req, res, next) {
         return res.status(403).json({ error: "Usuário não validado. Você não pode criar requisições." });
     }
 
-    next(); // Permite a continuação da requisição
+    next()
 }
