@@ -1,6 +1,6 @@
 import express from 'express'
 import { getComplexByName } from '../services/complexServices.js'
-import { createNewUser, encryptPassword, checkPassword, getUserByUsername, updateUser } from "../services/userServices.js";
+import { createNewUser, encryptPassword, checkPassword, getUserByUsername, updateUser, deleteUserByID } from "../services/userServices.js";
 import { prisma } from '../lib/prisma.js' 
 import { createToken, verifyToken } from '../middleware/tokenHandler.js';
 import { loginLimiter } from '../middleware/loginLimiter.js';
@@ -79,6 +79,7 @@ const router = express.Router()
  *       500:
  *         description: Erro interno do servidor
  */
+
 router.post('/register', async (req, res) => {
     try {
         const { name, username, password, complexName, complement } = req.body
@@ -148,6 +149,7 @@ router.post('/register', async (req, res) => {
  *       500:
  *         description: Erro interno do servidor
  */
+
 router.post('/login', loginLimiter, async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -275,7 +277,61 @@ router.put('/allowUser', verifyToken, async (req, res) => {
         console.error(error);
         res.status(500).json({ error: "Erro ao realizar liberação de usuário" });
     }
-});
+})
 
+/**
+ * @swagger
+ * /adminDeleteUser:
+ *   delete:
+ *     summary: Exclui um usuário (apenas ADMIN_COMPLEX)
+ *     tags: [Usuários]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Nome de usuário do usuário a ser excluído.
+ *     responses:
+ *       200:
+ *         description: Usuário excluído com sucesso.
+ *       403:
+ *         description: Acesso negado ou tentativa de excluir outro ADMIN_COMPLEX.
+ *       404:
+ *         description: Usuário não encontrado.
+ *       500:
+ *         description: Erro ao excluir usuário.
+ */
+
+router.delete('/adminDeleteUser',verifyToken, async (req, res) => {
+    try {
+        const { id, type } = req.user
+        const { username } = req.body
+        if( type !== USER_ROLES.ADMIN_COMPLEX){
+            return res.status(403).json({error:"Acesso negado"})
+        }
+
+        const user = await getUserByUsername(username)
+        if(!user){
+            return res.status(404).json({error:"Usuário não encontrado"})
+        }
+
+        if(user.type == USER_ROLES.ADMIN_COMPLEX){
+            return res.status(403).json({error:"Não é possível excluir outro Admin"})
+        }
+
+        await deleteUserByID(user.id)
+        return res.status(200).json({message:"Usuario excluido com sucesso"})
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({error:"Erro ao excluir usuário"})
+    }
+})
 
 export default router
