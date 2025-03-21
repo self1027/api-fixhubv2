@@ -68,4 +68,17 @@ export async function updateUser (userId, { type, password }) {
         console.error("Erro ao atualizar usuário:", error);
         throw error;
     }
-};
+}
+
+export async function deleteUserByID(userId) {
+    try {
+        await prisma.user.delete({
+            where:{
+                id: userId
+            }
+        })
+    } catch (error) {
+        console.log("Erro ao excluir usuário:", error)
+        throw error
+    }
+}
