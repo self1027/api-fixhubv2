@@ -10,7 +10,7 @@ const options = {
             description: 'API para gerenciamento de manutenções',
         },
     },
-    apis: ['./src/route/*.js'], // Certifique-se de que as rotas estão nesse caminho
+    apis: ['./src/route/*.js'],
 };
 
 const swaggerSpec = swaggerJSDoc(options);

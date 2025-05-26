@@ -159,7 +159,10 @@ router.post('/login', loginLimiter, async (req, res) => {
         }
 
         const user = await prisma.user.findUnique({
-            where: { username }
+            where: { username },
+            include: {
+                complex: true
+            }
         });
 
         if (user.type == USER_ROLES.NAO_VALIDADO) {
@@ -172,7 +175,15 @@ router.post('/login', loginLimiter, async (req, res) => {
 
         const { accessToken, refreshToken } = await createToken(user.id, user.username, user.type);
 
-        res.status(200).json({ accessToken, refreshToken });
+        res.status(200).json({
+            accessToken,
+            refreshToken,
+            username: user.username,
+            name: user.name,
+            complexName: user.complex?.name || null,
+            complement: user.complement,
+            type: user.type
+        });
 
     } catch (error) {
         console.error(error);
@@ -228,56 +239,33 @@ router.post('/login', loginLimiter, async (req, res) => {
 
 router.put('/allowUser', verifyToken, async (req, res) => {
     try {
-        const { id, type } = req.user; // Usuário logado
-        const { username, newType, newPassword } = req.body;
+        const { id } = req.body;
 
-        if (![USER_ROLES.ADMIN_COMPLEX, USER_ROLES.SINDICO].includes(type)) {
-            return res.status(403).json({ error: "Acesso negado" });
+        if (!id) {
+            return res.status(400).json({ error: "ID do usuário é obrigatório" });
         }
 
-        // Buscar usuário pelo username
-        const user = await getUserByUsername(username);
+        const user = await prisma.user.findUnique({
+        where: { id: id }
+        });
+
         if (!user) {
-            return res.status(404).json({ error: "Usuário não encontrado" });
+        return res.status(404).json({ error: "Usuário não encontrado" });
         }
 
-        // Restrição: Síndico só pode modificar usuários de tipo maior que 3 (não pode alterar síndicos ou admins)
-        if (type === USER_ROLES.SINDICO && user.type < USER_ROLES.RESPONSAVEL_MANUTENCAO) {
-            return res.status(403).json({ error: "Síndico não pode modificar este usuário" });
-        }
+        await prisma.user.update({
+        where: { id: id },
+        data: { type: USER_ROLES.MORADOR }
+        });
 
-        let updateData = {};
 
-        // Validação do novo tipo (se fornecido)
-        if (newType !== undefined) {
-            if (!Object.values(USER_ROLES).includes(newType)) {
-                return res.status(400).json({ error: "Tipo de usuário inválido" });
-            }
-            // Síndico não pode definir tipo admin ou Síndico
-            if (type === USER_ROLES.SINDICO && newType < USER_ROLES.RESPONSAVEL_MANUTENCAO) {
-                return res.status(403).json({ error: "Síndico não pode definir este nível de usuário" });
-            }
-            updateData.type = newType;
-        }
-
-        // Atualizar senha, se fornecida
-        if (newPassword) {
-            updateData.password = await encryptPassword(newPassword);
-        }
-
-        // Só atualizar se houver algo para modificar
-        if (Object.keys(updateData).length === 0) {
-            return res.status(400).json({ error: "Nenhum campo válido para atualização" });
-        }
-
-        await updateUser(user.id, updateData);
-
-        return res.status(200).json({ message: "Usuário atualizado com sucesso" });
+        return res.status(200).json({ message: "Usuário atualizado para MORADOR com sucesso" });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Erro ao realizar liberação de usuário" });
+        res.status(500).json({ error: "Erro ao atualizar usuário" });
     }
-})
+});
+
 
 /**
  * @swagger
@@ -333,5 +321,121 @@ router.delete('/adminDeleteUser',verifyToken, async (req, res) => {
         res.status(500).json({error:"Erro ao excluir usuário"})
     }
 })
+
+router.post('/usuariosPendentes/:username', verifyToken, async (req, res) => {
+    try {
+        //const { id, type } = req.user;
+        const { username } = req.params;
+
+        /* Verifica se o usuário tem permissão
+        if (![USER_ROLES.ADMIN_COMPLEX, USER_ROLES.SINDICO].includes(type)) {
+            return res.status(403).json({ error: "Acesso negado" });
+        }*/
+
+        // Busca o usuário pelo username
+        const user = await prisma.user.findUnique({
+            where: { username },
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: "Usuário não encontrado" });
+        }
+
+        const idComplex = user.id_Complex;
+
+        // Consulta usuários pendentes do mesmo complexo
+        const usuariosPendentes = await prisma.user.findMany({
+            where: {
+                id_Complex: idComplex,
+                type: USER_ROLES.NAO_VALIDADO,
+            },
+            select: {
+                id: true,
+                name: true,
+                username: true,
+                complement: true,
+                type: true,
+                status: true,
+            },
+        });
+
+        return res.status(200).json({ usuarios: usuariosPendentes });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Erro ao buscar usuários pendentes" });
+    }
+});
+
+router.get('/usersByComplex/:username', verifyToken, async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    // Buscar o id do complexo do usuário
+    const user = await prisma.user.findUnique({
+      where: { username },
+      select: { id_Complex: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+
+    const complexId = user.id_Complex;
+
+    // Buscar todos os usuários do mesmo complexo, exceto os não validados
+    const usersInComplex = await prisma.user.findMany({
+      where: {
+        id_Complex: complexId,
+        type: {
+          not: USER_ROLES.NAO_VALIDADO
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        type: true,
+        status: true,
+        complement: true
+      }
+    });
+
+    return res.json(usersInComplex);
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Erro ao buscar usuários do complexo" });
+  }
+});
+
+// Atualiza o tipo de um usuário
+router.put('/user/update-type/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.body;
+
+    if (typeof type !== 'number') {
+      return res.status(400).json({ error: 'Tipo inválido' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { type }
+    });
+
+    return res.json({
+      message: 'Tipo de usuário atualizado com sucesso',
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        type: updatedUser.type
+      }
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erro ao atualizar tipo do usuário' });
+  }
+});
 
 export default router

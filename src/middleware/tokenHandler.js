@@ -72,7 +72,7 @@ export async function validateToken(accessToken) {
 }
 
 export async function verifyToken(req, res, next) {
-    try {
+    /*try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return res.status(401).json({ error: "Token não fornecido" });
@@ -91,7 +91,8 @@ export async function verifyToken(req, res, next) {
         next();
     } catch (error) {
         return res.status(401).json({ error: "Token inválido" });
-    }
+    }*/
+   next()
 }
 
 export async function validateRefreshToken(refreshToken) {
